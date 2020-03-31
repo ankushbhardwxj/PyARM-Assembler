@@ -35,7 +35,7 @@ conditions = [
  "EQ", "NE", "CS", "CC",
  "MI", "PL", "VS", "VC",
  "HI", "LS", "GE", "LT",
- "GT", "LE", "AL"]
+ "GT", "LE"]
  
 data_proc = {
 "AND":0000,
@@ -96,12 +96,34 @@ instruction_format = {
   "U" : 1,
   "W" : 1,
 }
+single_data_transfer = {
+"LDR": 1, "STR":0
+}
+software_interrupt = {
+ "SWI": 0, "SVC": 1,
+}
+move_instructions = {
+"MOV":13,
+"MVN":15
+}
 
+def parse_move(line, lineNumber):
+  print "Parsing move", line
 
- 
+def parse_branch(line, ins, lineNumber): 
+  print "Parsing branch", line
+
+def parse_swp(line, ins, lineNumber):
+  print "Parsing swap", line
+
+def parse_swi(line,lineNumber): 
+  print "Parsing swi",line
+
+def parse_sdt(line, lineNumber): 
+  print "Parsing sdt",line
 
 def parse_dpi(line, lineNumber): 
-  print "Parsing for dpi" 
+  print "Parsing for dpi",line,lineNumber 
 
 def parse_condition(line,lineNumber):
   print "Parsing for conditions"
@@ -116,31 +138,54 @@ def parseFile(f):
   for line in file: 
     lineNumber += 1
     line = line.split(';')
-    line = line[0]
-    # start parsing line by line from here 
-    # match line with instructions here 
+    line = line[0] 
     # look for condition
-    for ins in line: 
-      print ins
-    for instruction in line: 
-      for cond in conditions:
-        if instruction == cond:
-          parse_condition(line,lineNumber)
+    for cond in conditions:
+      if cond in line:
+        parse_condition(line,lineNumber)
     # look for data processing instructions
-    for instruction in line: 
-      for dpi in data_proc: 
-        if instruction == dpi: 
-          parse_dpi(line,lineNumber)     
-    
+    for dpi in data_proc: 
+      if dpi in line:
+        parse_dpi(line, lineNumber)
+    # look for single data transfer instructions
+    for sdt in single_data_transfer: 
+      if sdt in line:
+        parse_sdt(line, lineNumber) 
+    # look for interrupts
+    for swi in software_interrupt: 
+      if swi in line: 
+        parse_swi(line, lineNumber)   
+    # look for branches B, BL, BLX(branch-line-exchnge) 
+    for _i in range(len(conditions)): 
+      ins = "B" + conditions[_i]
+      if ins in line: 
+        parse_branch(line, ins, lineNumber)
+      ins = "BL" + conditions[_i]
+      if ins in line:   
+        parse_branch(line, ins, lineNumber)
+      ins = "BLX" + conditions[_i]
+      if ins in line:
+        parse_branch(line, ins, lineNumber)     
+    # look for single data swap
+    ins = "SWP" 
+    if ins in line: 
+       parse_swp(line, ins, lineNumber)  
+    # look for move instruction
+    for mv in move_instructions:
+      if mv in line: 
+        parse_move(line,lineNumber)      
+
+
 def getfile(f):
   print "getting file",f 
   # check if file is present
   path = os.path
   if path.exists(f): 
     parseFile(f)  
-    checkLoops()
+   # checkLoops()
   else :
     print "File Not Found!"
+
 
 if __name__ == "__main__":
   # get file from current path

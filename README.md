@@ -26,6 +26,7 @@ get all 8 bits and write them to a object text file.
 - A [C](https://github.com/jlowe64/Assembly-Language-Parser/blob/master/asm.c) based assembly parser
 - Standard Assembly [book](http://arantxa.ii.uam.es/~gdrivera/sed/docs/ARMBook.pdf)
 - ARM7 [Instruction Set](https://iitd-plos.github.io/col718/ref/arm-instructionset.pdf)
+- A good [resource](https://github.com/stephanh42/armasm/blob/2a03810a2235997daa14ce6efebb0d4acac2d2c9/armasm.py#L42)
 
 #### Open questions: 
 - Will this support 8051 microcontroller?

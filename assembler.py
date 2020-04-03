@@ -120,13 +120,33 @@ def parse_swi(line,lineNumber):
   print "Parsing swi",line
 
 def parse_sdt(line, lineNumber): 
-  print "Parsing sdt",line
+  # specifically LDR and STR 
+  line = line.strip();
+  line = line.split(" ");
+ #  f = open("binary.obj","w+")
+  sdt = line[0]
+  source_reg = line[1].strip(',')
+  base_reg = line[2] 
+  bit = single_data_transfer[line[0]]
+  # check if base_reg is label, if label then get value
+  for key in labels: 
+    print key
 
 def parse_dpi(line, lineNumber): 
-  print "Parsing for dpi",line,lineNumber 
+  print "Parsing for dpi",line 
 
 def parse_condition(line,lineNumber):
-  print "Parsing for conditions"
+  """
+  different types of conditions have different
+  number of bits in them which is denoted by their idx
+  """
+def parse_label(line, lineNumber):
+  line = line.strip()
+  line = line.split(" ")
+  label_name = line[0] 
+  command = line[3]
+  value = line[4]
+  labels.append({label_name : {command: value}})
 
 def parseFile(f): 
   # read each file and get each line
@@ -139,6 +159,15 @@ def parseFile(f):
     lineNumber += 1
     line = line.split(';')
     line = line[0] 
+    # parse label and push instruction to label array
+    label = "DCW"
+    if label in line: 
+      parse_label(line,lineNumber)
+  # second loop for !label 
+  for line in file: 
+    lineNumber += 1
+    line = line.split(';')
+    line = line[0]
     # look for condition
     for cond in conditions:
       if cond in line:
@@ -174,7 +203,6 @@ def parseFile(f):
     for mv in move_instructions:
       if mv in line: 
         parse_move(line,lineNumber)      
-
 
 def getfile(f):
   print "getting file",f 

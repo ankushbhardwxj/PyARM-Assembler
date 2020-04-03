@@ -17,6 +17,11 @@ Read input line, parse the opcode, check for operands, addressing modes etc,
 get all 8 bits and write them to a object text file.  
 
 
+### How to run ? 
+```
+python assembler.py -f fileName.s 
+```
+
 
 #### Some material : 
 - [ARM Assembly](http://www.toves.org/books/arm/): ARM assembly doc.

@@ -26,10 +26,9 @@ _swi_format = _InstructionFormat("Cond 1 1 1 1 Imm24")
 
 """
 
-opcode = []
 labels = []
 operands = []
-instructions = []
+registers = []
 
 conditions = [
  "EQ", "NE", "CS", "CC",
@@ -119,19 +118,40 @@ def parse_swp(line, ins, lineNumber):
 def parse_swi(line,lineNumber): 
   print "Parsing swi",line
 
+def checkIfLabel(reg):
+  for keys in labels: 
+    k = keys.get(reg)
+    if k != None:
+      return k 
+
 def parse_sdt(line, lineNumber): 
   # specifically LDR and STR 
   line = line.strip();
   line = line.split(" ");
- #  f = open("binary.obj","w+")
   sdt = line[0]
+  if sdt == "LDR": 
+    L = 1
+  else: 
+    L = 0
   source_reg = line[1].strip(',')
   base_reg = line[2] 
   bit = single_data_transfer[line[0]]
   # check if base_reg is label, if label then get value
-  for key in labels: 
-    print key
-
+  # print bin(int(x.get(base_reg).replace("&","").lower(),16)).zfill(8)
+  new_base_reg = checkIfLabel(base_reg)
+  if new_base_reg != None:
+    for x in range(len(line)): 
+      if line[x] == base_reg:
+        line[x] = new_base_reg
+  # write this instruction to file 
+  #TODO: Add support for checking condition & offset
+  binary = "0000"+"01"+"0"+"0"+"0"+"1"+str(bin(int(new_base_reg.replace("&","").lower(),16)))+"0000"
+#   print binary
+  f = open("binary.obj","a")
+  f.write(binary)
+  f.close()
+  # save reference of new_base_reg and source_reg which will be used later 
+  
 def parse_dpi(line, lineNumber): 
   print "Parsing for dpi",line 
 
@@ -146,7 +166,7 @@ def parse_label(line, lineNumber):
   label_name = line[0] 
   command = line[3]
   value = line[4]
-  labels.append({label_name : {command: value}})
+  labels.append({label_name : value})
 
 def parseFile(f): 
   # read each file and get each line

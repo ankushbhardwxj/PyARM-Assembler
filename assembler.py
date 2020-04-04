@@ -116,7 +116,14 @@ def parse_swp(line, ins, lineNumber):
   print "Parsing swap", line
 
 def parse_swi(line,lineNumber): 
-  print "Parsing swi",line
+  # TODO add condition bits - default as 0000
+  line = line.strip()
+  line = line.split(" ")
+  inte = line[0] 
+  val = line[1]
+  val = bin(int(val.replace("&","").lower(),16))
+  binary = "0000"+"1111"+str(val)
+  createBinaryFile(binary)
 
 def checkIfLabel(reg):
   for keys in labels: 
@@ -132,13 +139,14 @@ def createBinaryFile(binary):
 def parse_sdt(line, lineNumber): 
   # specifically LDR and STR 
   line = line.strip();
-  line = line.split(" ");
+  line = line.split(" ")
   sdt = line[0]
   if sdt == "LDR": 
     L = 1
   else: 
     L = 0
   source_reg = line[1].strip(',')
+  # check if source_reg can be converted to binary else use 00000000 
   base_reg = line[2] 
   bit = single_data_transfer[line[0]]
   # check if base_reg is label, if label then get value

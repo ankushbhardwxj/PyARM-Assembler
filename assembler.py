@@ -37,22 +37,22 @@ conditions = [
  "GT", "LE"]
  
 data_proc = {
-"AND":0000,
-"EOR":0001,
-"SUB":0010,
-"RSB":0011, 
-"ADD":0100,
-"ADC":0101,
-"SBC":0110,
-"RSC":0111,
-"TST":1000,
-"TEQ":1001,
-"CMP":1010,
-"CMN":1011, 
-"ORR":1100,
-"MOV":1101, 
-"BIC":1110, 
-"MVN":1111
+"AND":"0000",
+"EOR":"0001",
+"SUB":"0010",
+"RSB":"0011", 
+"ADD":"0100",
+"ADC":"0101",
+"SBC":"0110",
+"RSC":"0111",
+"TST":"1000",
+"TEQ":"1001",
+"CMP":"1010",
+"CMN":"1011", 
+"ORR":"1100",
+"MOV":"1101", 
+"BIC":"1110", 
+"MVN":"1111"
 }
 
 instruction_format = {
@@ -124,6 +124,11 @@ def checkIfLabel(reg):
     if k != None:
       return k 
 
+def createBinaryFile(binary):
+  f = open("binary.obj","a")
+  f.write(binary)
+  f.close()
+
 def parse_sdt(line, lineNumber): 
   # specifically LDR and STR 
   line = line.strip();
@@ -144,16 +149,38 @@ def parse_sdt(line, lineNumber):
       if line[x] == base_reg:
         line[x] = new_base_reg
   # write this instruction to file 
-  #TODO: Add support for checking condition & offset
-  binary = "0000"+"01"+"0"+"0"+"0"+"1"+str(bin(int(new_base_reg.replace("&","").lower(),16)))+"0000"
-#   print binary
-  f = open("binary.obj","a")
-  f.write(binary)
-  f.close()
+  # TODO: Add support for checking condition & offset, default 0000
+  new_base_reg_bin = str(bin(int(new_base_reg.replace("&","").lower(),16)))
+  binary = "0000"+"01"+"0"+"0"+"0"+"1"+new_base_reg_bin+"00000000"
+  createBinaryFile(binary)
   # save reference of new_base_reg and source_reg which will be used later 
+  registers.append({source_reg : new_base_reg_bin}) 
+    
   
 def parse_dpi(line, lineNumber): 
-  print "Parsing for dpi",line 
+  # TODO Add support for checking condition & offset, default 0000
+  line =  line.strip()
+  line = line.split(" ")
+  opcode = line[0]
+  # convert opcode to its binary 
+  for proc in data_proc: 
+    if opcode == proc: 
+      opcode = data_proc[proc]
+  # get value of registers from array
+  source_reg = line[1]
+  source_reg = source_reg.split(",")[0]
+  dest_reg = line[2]
+  dest_reg = dest_reg.split(",")[0] 
+  operand_reg = line[3] 
+  for reg in registers:
+    for k,v in reg.items(): 
+      if k == dest_reg: 
+        dest_reg = v
+      if k == operand_reg: 
+        operand_reg = v
+
+  binary = "0000"+"00"+"0"+opcode+"1"+operand_reg+dest_reg
+  createBinaryFile(binary)
 
 def parse_condition(line,lineNumber):
   """
@@ -230,8 +257,9 @@ def getfile(f):
   path = os.path
   if path.exists(f): 
     parseFile(f)  
+    print "Binary File 'binary.obj' has been created"
    # checkLoops()
-  else :
+  else:
     print "File Not Found!"
 
 

@@ -14,8 +14,8 @@ MOV R3, R9   # assembly
 ``` 
 An assembler has two passes, coz it skips certain lines in first pass.   
 Read input line, parse the opcode, check for operands, addressing modes etc,   
-get all 8 bits and write them to a object text file.  
-
+get all 8 bits and write them to a object text file.       
+This assembler, however, is an one pass assembler.    
 
 ### How to run ? 
 ```
@@ -33,10 +33,5 @@ python assembler.py -f fileName.s
 - ARM7 [Instruction Set](https://iitd-plos.github.io/col718/ref/arm-instructionset.pdf)
 - A good [resource](https://github.com/stephanh42/armasm/blob/2a03810a2235997daa14ce6efebb0d4acac2d2c9/armasm.py#L42)
 
-#### Open questions: 
-- Will this support 8051 microcontroller?
-- 8051 is 8 bit Von Neumann arch, and ARM is 32 bit Modified Harvard arch. What    
-  difference would that make ? 
-
 #### Future Work 
-- Create another assembler for 8051
+- Make a 8051 version of this, preferably using Chapel Language.

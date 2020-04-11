@@ -101,16 +101,18 @@ single_data_transfer = {
 software_interrupt = {
  "SWI": 0, "SVC": 1,
 }
+"""
 move_instructions = {
 "MOV":13,
 "MVN":15
 }
-
+"""
+"""
 def parse_move(line, lineNumber):
   print "Parsing move", line
-
+"""
 def parse_branch(line, ins, lineNumber): 
-  print "Parsing branch", line
+  
 
 def parse_swp(line, ins, lineNumber):
   print "Parsing swap", line
@@ -145,25 +147,30 @@ def parse_sdt(line, lineNumber):
     L = 1
   else: 
     L = 0
-  source_reg = line[1].strip(',')
-  # check if source_reg can be converted to binary else use 00000000 
-  base_reg = line[2] 
-  bit = single_data_transfer[line[0]]
-  # check if base_reg is label, if label then get value
-  # print bin(int(x.get(base_reg).replace("&","").lower(),16)).zfill(8)
-  new_base_reg = checkIfLabel(base_reg)
-  if new_base_reg != None:
-    for x in range(len(line)): 
-      if line[x] == base_reg:
-        line[x] = new_base_reg
-  # write this instruction to file 
-  # TODO: Add support for checking condition & offset, default 0000
-  new_base_reg_bin = str(bin(int(new_base_reg.replace("&","").lower(),16)))
-  binary = "0000"+"01"+"0"+"0"+"0"+"1"+new_base_reg_bin+"00000000"
-  createBinaryFile(binary)
-  # save reference of new_base_reg and source_reg which will be used later 
-  registers.append({source_reg : new_base_reg_bin}) 
-    
+  if L == 1: 
+    source_reg = line[1].strip(',')
+    # check if source_reg can be converted to binary else use 00000000 
+    base_reg = line[2] 
+    bit = single_data_transfer[line[0]]
+    # check if base_reg is label, if label then get value
+    # print bin(int(x.get(base_reg).replace("&","").lower(),16)).zfill(8)
+    new_base_reg = checkIfLabel(base_reg)
+    if new_base_reg != None:
+      for x in range(len(line)): 
+        if line[x] == base_reg:
+          line[x] = new_base_reg
+    # write this instruction to file 
+    # TODO: Add support for checking condition & offset, default 0000
+    try: 
+      new_base_reg_bin = str(bin(int(new_base_reg.replace("&","").lower(),16)))
+      binary = "0000"+"01"+"0"+"0"+"0"+"1"+new_base_reg_bin+"00000000"
+      createBinaryFile(binary)
+      registers.append({source_reg : new_base_reg_bin}) 
+    except: 
+      print "Syntax Error. Unable to parse label" 
+    # save reference of new_base_reg and source_reg which will be used later 
+  else: 
+    print "SDT is STR"
   
 def parse_dpi(line, lineNumber): 
   # TODO Add support for checking condition & offset, default 0000
@@ -175,11 +182,16 @@ def parse_dpi(line, lineNumber):
     if opcode == proc: 
       opcode = data_proc[proc]
   # get value of registers from array
-  source_reg = line[1]
-  source_reg = source_reg.split(",")[0]
-  dest_reg = line[2]
-  dest_reg = dest_reg.split(",")[0] 
-  operand_reg = line[3] 
+  if len(line) > 3:
+    source_reg = line[1]
+    source_reg = source_reg.split(",")[0]
+    dest_reg = line[2]
+    dest_reg = dest_reg.split(",")[0] 
+    operand_reg = line[3]
+  else: 
+    source_reg = line[1].split(",")[0]
+    operand_reg = line[2].split(",")[0]
+    dest_reg = '' 
   for reg in registers:
     for k,v in reg.items(): 
       if k == dest_reg: 
@@ -196,12 +208,17 @@ def parse_condition(line,lineNumber):
   number of bits in them which is denoted by their idx
   """
 def parse_label(line, lineNumber):
-  line = line.strip()
-  line = line.split(" ")
-  label_name = line[0] 
-  command = line[3]
-  value = line[4]
-  labels.append({label_name : value})
+  try: 
+    line = line.strip()
+    line = line.split(" ")
+    label_name = line[0] 
+    command = line[1]
+    value = line[2]
+    labels.append({label_name : value})
+   # print labels
+  except: 
+    print "Syntax Error! Cannot parse label due to spaces in line "+ lineNumber
+    print "Tip: Replace spaces with tabs in source" 
 
 def parseFile(f): 
   # read each file and get each line
@@ -209,16 +226,20 @@ def parseFile(f):
     with open(f) as fp: 
       file = fp.read()
   lineNumber = 0
+  lineOfLabels = 0
   file = file.split('\n') 
   for line in file: 
-    lineNumber += 1
+    lineOfLabels += 1
     line = line.split(';')
     line = line[0] 
     # parse label and push instruction to label array
-    label = "DCW"
-    if label in line: 
-      parse_label(line,lineNumber)
-  # second loop for !label 
+    label = ["DCW","DCD"]
+    for lbl in label:
+      if lbl in line: 
+       # print lbl, line
+        parse_label(line,lineNumber)
+  # second loop for !label
+  lineNumber += lineOfLabels 
   for line in file: 
     lineNumber += 1
     line = line.split(';')
@@ -254,19 +275,40 @@ def parseFile(f):
     ins = "SWP" 
     if ins in line: 
        parse_swp(line, ins, lineNumber)  
-    # look for move instruction
+"""   
+ # look for move instruction
     for mv in move_instructions:
       if mv in line: 
         parse_move(line,lineNumber)      
+"""
+
+debug = 0;
+def showDebug(): 
+  print "*** LABEL ***"
+  for label in labels: 
+    print label
+  print "*** REGISTERS ***"
+  for reg in registers:
+    print reg
+  print "*** OPERANDS ***"
+  for op in operands: 
+    print op
 
 def getfile(f):
   print "getting file",f 
   # check if file is present
   path = os.path
   if path.exists(f): 
-    parseFile(f)  
-    print "Binary File 'binary.obj' has been created"
-   # checkLoops()
+    try: 
+      parseFile(f) 
+      if debug == 1: 
+        showDebug() 
+      print "Binary File 'binary.obj' has been created"
+      # checkLoops()
+    except:
+      if debug == 1: 
+        showDebug()
+      print "Stopped Parsing! Unknown ARM syntax."
   else:
     print "File Not Found!"
 
@@ -277,8 +319,10 @@ if __name__ == "__main__":
   # we want to generate 8 bits
   # write generated bits to newfile
   print "Assembler running..." 
-  flag = sys.argv[1] 
-  fileName = sys.argv[2]
-  if flag == "-f": 
-    getfile(fileName)
-
+  try: 
+    flag = sys.argv[1] 
+    fileName = sys.argv[2]
+    if flag == "-f": 
+      getfile(fileName)
+  except: 
+    print "Type python assembler.py -f <fileName>.s"

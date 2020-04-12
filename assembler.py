@@ -1,14 +1,7 @@
 import os
 import argparse
 import sys
-"""
-We can try to create the two phase assembler, 
-but we will try something else first, since no 
-theory of 2 phase has been found for ARM7. 
-We will parse all opcodes, operands, addressmodes 
-and store them in arrays and then think about 
-converting each of them to machine code serially. 
-"""
+
 """
 **************** SOME FORMATS *************
 _dpi_format = _InstructionFormat("Cond 0 0 I Opcode S Rn Rd Operand2")
@@ -55,46 +48,6 @@ data_proc = {
 "MVN":"1111"
 }
 
-instruction_format = {
-  "0" : 1,
-  "1" : 1,
-  "A" : 1,
-  "B" : 1,
-  "c" : 1,
-  "x" : 1,
-  "s" : 1,
-  "f" : 1,
-  "CPNum" : 4,
-  "CRd" : 4,
-  "CRm" : 4,
-  "CRn" : 4,
-  "Cond" : 4,
-  "H" : 1,
-  "I" : 1,
-  "Imm24" : 24,
-  "L" : 1,
-  "N" : 1,
-  "Offset" : 0,
-  "Offset1" : 4,
-  "Offset2" : 4,
-  "Op1" : 0,
-  "Op2" : 3,
-  "Opcode" : 4,
-  "Operand2" : 12,
-  "P" : 1,
-  "Rd" : 4,
-  "RdHi" : 4,
-  "RdLo" : 4,
-  "RegisterList" : 16,
-  "R" : 1,
-  "Rm" : 4,
-  "Rn" : 4,
-  "Rs" : 4,
-  "S" : 1,
-  "Shift" : 3,
-  "U" : 1,
-  "W" : 1,
-}
 single_data_transfer = {
 "LDR": 1, "STR":0
 }
@@ -113,7 +66,41 @@ def parse_move(line, lineNumber):
 """
 def parse_branch(line, ins, lineNumber): 
   cond = ins[1:]
-  print cond  
+  idx = 0
+  for x in conditions: 
+    idx += 1
+    if x == cond: 
+      cond = str(bin(int(idx - 1)))
+  binary = cond + "1010"
+  createBinaryFile(binary)
+# TODO need support for offset
+def parse_branch_with_link(line, ins, lineNumber):
+  cond = ins[1:]
+  idx = 0
+  for x in conditions: 
+    idx += 1
+    if x == cond: 
+      cond = str(bin(int(idx - 1)))
+  binary = cond + "1011"
+  createBinaryFile(binary)
+
+def parse_branch_and_exchange(line, ins, lineNumber):   
+  cond = ins[2:]
+  line = line.strip()
+  line = line.split(" ")
+  reg = line[1]
+  idx = 0
+  Rn = 0
+  for x in conditions: 
+    idx += 1
+    if x == cond: 
+      cond = str(bin(int(idx - 1)))
+  for r in registers: 
+    for k,v in r.items():
+      if reg == k:  
+        Rn = v
+  binary = cond + "000100101111111111110001" + Rn  
+  createBinaryFile(binary)
 
 def parse_swp(line, ins, lineNumber):
   print "Parsing swap", line
@@ -144,11 +131,7 @@ def parse_sdt(line, lineNumber):
   line = line.strip();
   line = line.split(" ")
   sdt = line[0]
-  if sdt == "LDR": 
-    L = 1
-  else: 
-    L = 0
-  if L == 1: 
+  if sdt == "LDR":  
     source_reg = line[1].strip(',')
     # check if source_reg can be converted to binary else use 00000000 
     base_reg = line[2] 
@@ -171,8 +154,18 @@ def parse_sdt(line, lineNumber):
       print "Syntax Error. Unable to parse label" 
     # save reference of new_base_reg and source_reg which will be used later 
   else: 
-    print "SDT is STR"
-  
+    source_reg = line[1].strip(',')
+    source_reg_binary = 0
+    base_reg = line[2]
+    bit = single_data_transfer[line[0]]
+    for reg in registers: 
+      for k,v in reg.items(): 
+        if k == source_reg: 
+          source_reg_binary = v
+    registers.append({base_reg: source_reg_binary})
+    binary = "0000010001" + source_reg_binary + "00000000"
+    createBinaryFile(binary)
+
 def parse_dpi(line, lineNumber): 
   # TODO Add support for checking condition & offset, default 0000
   line =  line.strip()
@@ -268,10 +261,10 @@ def parseFile(f):
         parse_branch(line, ins, lineNumber)
       ins = "BL" + conditions[_i]
       if ins in line:   
-        parse_branch(line, ins, lineNumber)
-      ins = "BLX" + conditions[_i]
+        parse_branch_with_link(line, ins, lineNumber)
+      ins = "BX" + conditions[_i]
       if ins in line:
-        parse_branch(line, ins, lineNumber)     
+        parse_branch_and_exchange(line, ins, lineNumber)     
     # look for single data swap
     ins = "SWP" 
     if ins in line: 

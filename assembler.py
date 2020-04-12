@@ -103,7 +103,25 @@ def parse_branch_and_exchange(line, ins, lineNumber):
   createBinaryFile(binary)
 
 def parse_swp(line, ins, lineNumber):
-  print "Parsing swap", line
+  line = line.strip()
+  line = line.split(" ")
+  # TODO add condition bits - default as 0000/ empty
+  dest_reg = line[1].strip(",")
+  source_reg = line[2].strip(",")
+  base_reg = line[3]
+  dest_reg_bin = 0
+  source_reg_bin = 0
+  base_reg_bin = 0
+  for reg in registers: 
+    for k,v in reg.items(): 
+      if k == dest_reg:
+        dest_reg_bin = v
+      if k == source_reg: 
+        source_reg_bin = v
+      if k == base_reg: 
+        base_reg_bin = v
+  binary = "000000010000"+str(base_reg_bin)+str(dest_reg_bin)+"00001001"+str(source_reg_bin)
+  createBinaryFile(binary)  
 
 def parse_swi(line,lineNumber): 
   # TODO add condition bits - default as 0000
@@ -127,7 +145,6 @@ def createBinaryFile(binary):
   f.close()
 
 def parse_sdt(line, lineNumber): 
-  # specifically LDR and STR 
   line = line.strip();
   line = line.split(" ")
   sdt = line[0]
@@ -137,7 +154,6 @@ def parse_sdt(line, lineNumber):
     base_reg = line[2] 
     bit = single_data_transfer[line[0]]
     # check if base_reg is label, if label then get value
-    # print bin(int(x.get(base_reg).replace("&","").lower(),16)).zfill(8)
     new_base_reg = checkIfLabel(base_reg)
     if new_base_reg != None:
       for x in range(len(line)): 
@@ -209,7 +225,6 @@ def parse_label(line, lineNumber):
     command = line[1]
     value = line[2]
     labels.append({label_name : value})
-   # print labels
   except: 
     print "Syntax Error! Cannot parse label due to spaces in line "+ lineNumber
     print "Tip: Replace spaces with tabs in source" 
@@ -230,7 +245,6 @@ def parseFile(f):
     label = ["DCW","DCD"]
     for lbl in label:
       if lbl in line: 
-       # print lbl, line
         parse_label(line,lineNumber)
   # second loop for !label
   lineNumber += lineOfLabels 
@@ -290,7 +304,6 @@ def showDebug():
 
 def getfile(f):
   print "getting file",f 
-  # check if file is present
   path = os.path
   if path.exists(f): 
     try: 
@@ -308,10 +321,6 @@ def getfile(f):
 
 
 if __name__ == "__main__":
-  # get file from current path
-  # start parsing line by line
-  # we want to generate 8 bits
-  # write generated bits to newfile
   print "Assembler running..." 
   try: 
     flag = sys.argv[1] 

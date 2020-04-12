@@ -21,6 +21,7 @@ This assembler, however, is an one pass assembler.
 ```
 python assembler.py -f fileName.s 
 ```
+For debugging, set the `debug` variable in source equal to 1. 
 
 
 #### Some material : 

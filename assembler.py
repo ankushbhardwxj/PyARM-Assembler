@@ -112,7 +112,8 @@ def parse_move(line, lineNumber):
   print "Parsing move", line
 """
 def parse_branch(line, ins, lineNumber): 
-  
+  cond = ins[1:]
+  print cond  
 
 def parse_swp(line, ins, lineNumber):
   print "Parsing swap", line

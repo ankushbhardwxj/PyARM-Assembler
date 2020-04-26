@@ -10,9 +10,9 @@ Main
     STR R1, Result ; Store value in new reg
     SWI &11  ; Interrupt
 
-Value1   DCW &C123 ; assigned value
+Value1 DCW &C123 ; assigned value
+       ALIGN
+Value2 DCW &02AA ; assigned value
          ALIGN
-Value2   DCW &02AA ; assigned value
-         ALIGN
-Result   DCW 0  ; initialised result to 0
-         END
+Result DCW 0  ; initialised result to 0
+       END

@@ -54,16 +54,6 @@ single_data_transfer = {
 software_interrupt = {
  "SWI": 0, "SVC": 1,
 }
-"""
-move_instructions = {
-"MOV":13,
-"MVN":15
-}
-"""
-"""
-def parse_move(line, lineNumber):
-  print "Parsing move", line
-"""
 def parse_branch(line, ins, lineNumber): 
   cond = ins[1:]
   idx = 0
@@ -283,12 +273,6 @@ def parseFile(f):
     ins = "SWP" 
     if ins in line: 
        parse_swp(line, ins, lineNumber)  
-"""   
- # look for move instruction
-    for mv in move_instructions:
-      if mv in line: 
-        parse_move(line,lineNumber)      
-"""
 
 debug = 0;
 def showDebug(): 
